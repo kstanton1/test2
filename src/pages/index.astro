@@ -1,0 +1,49 @@
+---
+import { getCollection } from 'astro:content';
+import Layout from '~/layouts/PageLayout.astro';
+import Hero from '~/components/widgets/Hero.astro';
+import Note from '~/components/widgets/Note.astro';
+import BlogLatestPosts from '~/components/widgets/BlogLatestPosts.astro';
+import { fetchPosts, generatePermalink } from '~/utils/blog';
+
+// Fetch all posts from 'shop' collection
+const shopPosts = (await getCollection('shop')) || [];
+
+// Combine posts from all collections
+const posts = [...shopPosts];
+
+// Get canonical URL for each post
+if (posts) {
+  posts.forEach(post => {
+    post.url = generatePermalink(post);
+  });
+}
+
+const metadata = {
+  title: 'DAFT FM',
+  ignoreTitleTemplate: true,
+};
+---
+<Layout metadata={metadata}>
+  <!-- Hero Widget ******************* -->
+
+  <Hero
+    actions={[{ text: 'Subscribe', href: '/subscribe/' }]}
+    >
+    <Fragment slot="title">DAFT FM</Fragment>
+  </Hero>
+
+  <!-- Note Widget ******************* -->
+
+  <Note />
+
+  <!-- HighlightedPosts Widget ******* -->
+
+  {posts && posts.length > 0 && (
+    <BlogLatestPosts
+      title="Posts"
+      posts={posts}
+    />
+  )}
+
+</Layout>

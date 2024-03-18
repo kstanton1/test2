@@ -1,0 +1,40 @@
+---
+import type { InferGetStaticPropsType, GetStaticPaths } from 'astro';
+import { blogTagRobots, getStaticPathsBlogTag } from '~/utils/blog';
+
+import Layout from '~/layouts/PageLayout.astro';
+import BlogList from '~/components/blog/List.astro';
+import Headline from '~/components/blog/Headline.astro';
+import Pagination from '~/components/blog/Pagination.astro';
+
+export const prerender = true;
+
+export const getStaticPaths = (async ({ paginate }) => {
+  const paths = await getStaticPathsBlogTag({ paginate });
+  // Filter out paths with empty tags
+  return paths.filter(path => path.params && path.params.tag && path.params.tag !== '');
+}) satisfies GetStaticPaths;
+
+type Props = InferGetStaticPropsType<typeof getStaticPaths>;
+
+// Check if tag is provided, if not, set a default value
+const { page = {}, tag = 'default' } = Astro.props as Props;
+
+const currentPage = page.currentPage ?? 1;
+
+const metadata = {
+  title: tag && tag !== '' ? `Posts by tag '${tag}'${currentPage > 1 ? ` — Page ${currentPage} ` : ''}` : '',
+  robots: {
+    index: blogTagRobots?.index,
+    follow: blogTagRobots?.follow,
+  },
+};
+---
+
+<Layout metadata={metadata}>
+  <section class="px-4 md:px-6 py-12 sm:py-16 lg:py-20 mx-auto max-w-4xl">
+    {tag && tag !== '' && <Headline>Tag: {tag}</Headline>}
+    {page.data && <BlogList posts={page.data} />}
+    {page.url && <Pagination prevUrl={page.url.prev} nextUrl={page.url.next} />}
+  </section>
+</Layout>
